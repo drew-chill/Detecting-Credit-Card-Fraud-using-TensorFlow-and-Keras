@@ -1,0 +1,55 @@
+# The model has been trained to maximize its performance on our training data. How does it actually perform when making predictions on the training and test (aka unseen) data?
+# This isn't a matter of looking at a single number like the loss function.
+# The model outputs a number between 0 and 1. Although it isn't technically true, it helps to think of this as the probability that a transaction is fraudulent. 
+# A histogram of the outputs of predictions on the training set is below. The correct label is also shown (0 for legitimate, 1 for fraudulent).
+# The amount of samples for each label is slightly biased to make the scales similar.
+
+train_predictions = model.predict(train_features, batch_size=BATCH_SIZE)
+test_predictions = model.predict(test_features, batch_size=BATCH_SIZE)
+
+predictions_df = pd.DataFrame(
+    {"Prediction": train_predictions.ravel(), "Label": train_labels.ravel()}
+)
+predictions_df = pd.concat(
+    [
+        predictions_df[predictions_df["Label"] == 0].sample(5000, random_state=0),
+        predictions_df[predictions_df["Label"] == 1].sample(500, random_state=0),
+    ]
+)
+fig = px.histogram(
+    predictions_df,
+    x="Prediction",
+    title="Prediction values",
+    color="Label",
+    marginal="box",
+    labels={"0": "Legitimate", "1": "Fraudulent"},
+)
+fig.update_traces(opacity=0.75)
+fig.update_layout(barmode="overlay")
+fig.show()
+
+# Create ROC curve
+
+def make_roc_df(name, predictions, labels):
+    fp, tp, _ = sklearn.metrics.roc_curve(labels, predictions)
+    return pd.DataFrame({"fp": fp * 100, "tp": tp * 100, "Dataset": name})
+
+
+roc_df = pd.concat(
+    [
+        make_roc_df("Training", train_predictions, train_labels),
+        make_roc_df("Test", test_predictions, test_labels),
+    ]
+)
+
+fig = px.line(
+    roc_df,
+    title="ROC Curve",
+    x="fp",
+    y="tp",
+    color="Dataset",
+    labels={"fp": "False Positives (%)", "tp": "True Positives (%)"},
+)
+fig.update_yaxes(range=[60, 100])
+fig.update_traces(line={"dash": "dash"}, selector={"name": "test"})
+fig.show()
