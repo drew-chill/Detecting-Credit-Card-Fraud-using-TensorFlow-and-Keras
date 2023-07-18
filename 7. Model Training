@@ -1,0 +1,58 @@
+# Everything has been working towards this. Now we can train the model on our training set. Additionally, we use early stopping to prevent overfitting. 
+# This just means that if the model starts performing worse on the validation set, we revert to an earlier epoch when the performance was better.
+
+BATCH_SIZE = 64
+
+early_stopping = tf.keras.callbacks.EarlyStopping(
+    monitor="val_prc", verbose=1, patience=10, mode="max", restore_best_weights=True
+)
+
+training_history = model.fit(
+    train_features,
+    train_labels,
+    batch_size=BATCH_SIZE,
+    epochs=40,
+    callbacks=[early_stopping],
+    validation_data=(val_features, val_labels),
+    class_weight=class_weight,
+)
+
+res = []
+
+metrics_to_plot = [
+    ("loss", "Loss"),
+    ("precision", "Precision"),
+    ("recall", "Recall"),
+    ("auc", "Area under ROC curve"),
+    ("prc", "Area under PR curve"),
+]
+fig = make_subplots(rows=len(metrics_to_plot), cols=1)
+
+for metric, name in metrics_to_plot:
+    fig = go.Figure(
+        data=[
+            go.Scatter(
+                x=training_history.epoch,
+                y=training_history.history[metric],
+                mode="lines",
+                name="Training",
+            ),
+            go.Scatter(
+                x=training_history.epoch,
+                y=training_history.history["val_" + metric],
+                mode="lines",
+                line={"dash": "dash"},
+                name="Validation",
+            ),
+        ]
+    )
+    fig.update_yaxes(title=name)
+    fig.update_xaxes(title="Epoch")
+
+    if (metric, name) == metrics_to_plot[0]:
+        fig.update_layout(
+            height=250, title="Training history", margin={"b": 0, "t": 50}
+        )
+    else:
+        fig.update_layout(height=200, margin={"b": 0, "t": 0})
+    fig.show()
