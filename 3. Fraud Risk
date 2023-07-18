@@ -1,0 +1,76 @@
+# Fraud risk is the proportion of transactions for this terminal that were fraudulent or not—over the past 1, 7, or 30 days. 
+# Here, risk calculations are delayed by 7 days.
+
+DAY_DELAY = 7
+
+def get_count_risk_rolling_window(
+    terminal_transactions, window_size, delay_period=DAY_DELAY
+):
+    frauds_in_delay = terminal_transactions.rolling(
+        str(delay_period) + "d", on="TX_DATETIME"
+    )["TX_FRAUD"].sum()
+    transactions_in_delay = terminal_transactions.rolling(
+        str(delay_period) + "d", on="TX_DATETIME"
+    )["TX_FRAUD"].count()
+
+    frauds_until_window = terminal_transactions.rolling(
+        str(delay_period + window_size) + "d", on="TX_DATETIME"
+    )["TX_FRAUD"].sum()
+    transactions_until_window = terminal_transactions.rolling(
+        str(delay_period + window_size) + "d", on="TX_DATETIME"
+    )["TX_FRAUD"].count()
+
+    frauds_in_window = frauds_until_window - frauds_in_delay
+    transactions_in_window = transactions_until_window - transactions_in_delay
+
+    terminal_transactions["fraud_risk"] = (
+        frauds_in_window / transactions_in_window
+    ).fillna(0)
+
+    return terminal_transactions
+
+
+cleaned_df["terminal_num_transactions_1_day"] = transactions_df.groupby(
+    "TERMINAL_ID"
+).apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("1d", on="TX_DATETIME").count()
+)[
+    "TX_AMOUNT"
+]
+cleaned_df["terminal_num_transactions_7_day"] = transactions_df.groupby(
+    "TERMINAL_ID"
+).apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("7d", on="TX_DATETIME").count()
+)[
+    "TX_AMOUNT"
+]
+cleaned_df["terminal_num_transactions_30_day"] = transactions_df.groupby(
+    "TERMINAL_ID"
+).apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("30d", on="TX_DATETIME").count()
+)[
+    "TX_AMOUNT"
+]
+
+cleaned_df["terminal_fraud_risk_1_day"] = transactions_df.groupby("TERMINAL_ID").apply(
+    lambda x: get_count_risk_rolling_window(x, 1, 7)
+)["fraud_risk"]
+cleaned_df["terminal_fraud_risk_7_day"] = transactions_df.groupby("TERMINAL_ID").apply(
+    lambda x: get_count_risk_rolling_window(x, 7, 7)
+)["fraud_risk"]
+cleaned_df["terminal_fraud_risk_30_day"] = transactions_df.groupby("TERMINAL_ID").apply(
+    lambda x: get_count_risk_rolling_window(x, 30, 7)
+)["fraud_risk"]
+
+cleaned_df["day"] = transactions_df["TX_TIME_DAYS"]
+cleaned_df["datetime"] = transactions_df["TX_DATETIME"]
+cleaned_df["customer_id"] = transactions_df["CUSTOMER_ID"]
+cleaned_df["id"] = transactions_df["TRANSACTION_ID"]
+
+pd.concat(
+    # show some fraudulent and non-fraudulent transactions
+    [
+        cleaned_df[cleaned_df["is_fraud"] == 1].sample(5, random_state=0),
+        cleaned_df[cleaned_df["is_fraud"] == 0].sample(5, random_state=0),
+    ]
+).sample(10, random_state=0)
