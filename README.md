@@ -11,3 +11,5 @@ This notebook will walk through how to build a classification model for detectin
 3. Splitting the data up into training, validation, and test sets.
 4. Creating a feed-forward neural network using TensorFlow and Keras, accounting for imbalanced data.
 5. Evaluating the model by looking at its ROC curve
+
+## Two very important sources
