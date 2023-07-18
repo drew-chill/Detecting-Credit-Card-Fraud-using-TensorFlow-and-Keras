@@ -1,0 +1,42 @@
+# Feature engineering
+
+cleaned_df = pd.DataFrame()
+
+cleaned_df["amount"] = transactions_df["TX_AMOUNT"]
+cleaned_df["is_fraud"] = transactions_df["TX_FRAUD"]
+cleaned_df["is_weekend"] = transactions_df["TX_DATETIME"].dt.weekday >= 5
+cleaned_df["is_night"] = transactions_df["TX_DATETIME"].dt.hour <= 6
+
+# Calculating customer behaviors using Pandas 'groupby' and 'rolling' functions
+
+cleaned_df["customer_num_transactions_1_day"] = transactions_df.groupby(
+    "CUSTOMER_ID"
+).apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("1d", on="TX_DATETIME").count()
+)[
+    "TX_AMOUNT"
+]
+cleaned_df["customer_num_transactions_7_day"] = transactions_df.groupby(
+    "CUSTOMER_ID"
+).apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("7d", on="TX_DATETIME").count()
+)[
+    "TX_AMOUNT"
+]
+cleaned_df["customer_num_transactions_30_day"] = transactions_df.groupby(
+    "CUSTOMER_ID"
+).apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("30d", on="TX_DATETIME").count()
+)[
+    "TX_AMOUNT"
+]
+
+cleaned_df["customer_avg_amount_1_day"] = transactions_df.groupby("CUSTOMER_ID").apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("1d", on="TX_DATETIME").mean()
+)["TX_AMOUNT"]
+cleaned_df["customer_avg_amount_7_day"] = transactions_df.groupby("CUSTOMER_ID").apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("7d", on="TX_DATETIME").mean()
+)["TX_AMOUNT"]
+cleaned_df["customer_avg_amount_30_day"] = transactions_df.groupby("CUSTOMER_ID").apply(
+    lambda x: x[["TX_DATETIME", "TX_AMOUNT"]].rolling("30d", on="TX_DATETIME").mean()
+)["TX_AMOUNT"]
