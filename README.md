@@ -19,3 +19,29 @@ This document relies heavily on two well-written sources on credit card fraud de
 [Reproducible Machine Learning for Credit Card Fraud Detection - Practical Handbook](https://fraud-detection-handbook.github.io/fraud-detection-handbook/Foreword.html) . This book goes into all kinds of detail on what credit card fraud is and creates many different models to detect it. From now on, I'll refer to this as the Handbook.
 
 [Classification of imbalanced data](https://www.tensorflow.org/tutorials/structured_data/imbalanced_data?hl=zh-cn). This is an official TensorFlow tutorial going over building a credit card fraud detection model on a different dataset. From now on, I'll refer to this as the TensorFlow Tutorial.
+
+```
+from datetime import date, datetime, timedelta
+import os
+import math
+
+import plotly.express as px
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+import pandas as pd
+import sklearn
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+```
+
+```
+mpl.rcParams['figure.figsize'] = (12, 10)
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+```
