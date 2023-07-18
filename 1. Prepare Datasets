@@ -1,0 +1,54 @@
+# import libaries and data
+
+from datetime import date, datetime, timedelta
+import os
+import math
+
+import plotly.express as px
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+import pandas as pd
+import sklearn
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+mpl.rcParams['figure.figsize'] = (12, 10)
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+not_fraud_count, fraud_count = np.bincount(transactions_df["TX_FRAUD"])
+
+total_count = not_fraud_count + fraud_count
+print(
+    (
+        f"Data:\n"
+        f"    Total: {total_count}\n"
+        f"    Fraud: {fraud_count} ({100 * fraud_count / total_count:.2f}% of total)\n"
+    )
+)
+
+# Visualize fraudulent transactions
+
+df = pd.concat(
+    [
+        transactions_df[transactions_df["TX_FRAUD"] == 0].sample(1000, random_state=0),
+        transactions_df[transactions_df["TX_FRAUD"] == 1].sample(1000, random_state=0),
+    ]
+)
+
+fig = px.histogram(
+    df,
+    title="Transaction count for different amounts",
+    x="TX_AMOUNT",
+    color="TX_FRAUD",
+    marginal="box",
+)
+fig.update_traces(opacity=0.75)
+fig.update_layout(barmode="overlay")
+fig.show()
