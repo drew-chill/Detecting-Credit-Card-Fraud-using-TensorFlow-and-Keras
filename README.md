@@ -16,6 +16,6 @@ This notebook will walk through how to build a classification model for detectin
 
 This document relies heavily on two well-written sources on credit card fraud detection. I refer to both of these frequently and most of the code has been adapted from one of these sources. While they are quite thorough, I aim for this notebook to succinctly create a single model without compromising too much on its performance.
 
-(https://fraud-detection-handbook.github.io/fraud-detection-handbook/Foreword.html) Reproducible Machine Learning for Credit Card Fraud Detection - Practical Handbook. This book goes into all kinds of detail on what credit card fraud is and creates many different models to detect it. From now on, I'll refer to this as the Handbook.
+[Reproducible Machine Learning for Credit Card Fraud Detection - Practical Handbook](https://fraud-detection-handbook.github.io/fraud-detection-handbook/Foreword.html) . This book goes into all kinds of detail on what credit card fraud is and creates many different models to detect it. From now on, I'll refer to this as the Handbook.
 
  Classification of imbalanced data. This is an official TensorFlow tutorial going over building a credit card fraud detection model on a different dataset. From now on, I'll refer to this as the TensorFlow Tutorial.
