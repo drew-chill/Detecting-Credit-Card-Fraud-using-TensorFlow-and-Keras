@@ -1,0 +1,118 @@
+# Slicing the datasets
+
+# this is adapted from get_train_test_set at
+# https://fraud-detection-handbook.github.io/fraud-detection-handbook/Chapter_References/shared_functions.html#get-train-test-set
+def get_train_test_set(
+    df,
+    start_date_training,
+    delta_train=7,
+    delta_delay=DAY_DELAY,
+    delta_test=7,
+    random_state=0,
+):
+
+    # Get the training set data
+    train_df = df[
+        (df["datetime"] >= start_date_training)
+        & (df["datetime"] < start_date_training + timedelta(days=delta_train))
+    ]
+
+    # Get the test set data
+    test_df = []
+
+    # Note: Cards known to be compromised after the delay period are removed from the test set
+    # That is, for each test day, all frauds known at (test_day-delay_period) are removed
+
+    # First, get known defrauded customers from the training set
+    known_defrauded_customers = set(train_df[train_df["is_fraud"] == 1]["customer_id"])
+
+    # Get the relative starting day of training set (easier than TX_DATETIME to collect test data)
+    start_tx_time_days_training = train_df["day"].min()
+
+    # Then, for each day of the test set
+    for day in range(delta_test):
+
+        # Get test data for that day
+        test_df_day = df[
+            df["day"] == start_tx_time_days_training + delta_train + delta_delay + day
+        ]
+
+        # Compromised cards from that test day, minus the delay period, are added to the pool of known defrauded customers
+        test_df_day_delay_period = df[
+            df["day"] == start_tx_time_days_training + delta_train + day - 1
+        ]
+
+        new_defrauded_customers = set(
+            test_df_day_delay_period[test_df_day_delay_period["is_fraud"] == 1][
+                "customer_id"
+            ]
+        )
+        known_defrauded_customers = known_defrauded_customers.union(
+            new_defrauded_customers
+        )
+
+        test_df_day = test_df_day[
+            ~test_df_day["customer_id"].isin(known_defrauded_customers)
+        ]
+
+        test_df.append(test_df_day)
+
+    test_df = pd.concat(test_df)
+
+    # Sort data sets by ascending order of transaction ID
+    train_df = train_df.sort_values("id")
+    test_df = test_df.sort_values("id")
+
+    return (train_df, test_df)
+
+
+train_df, test_df = get_train_test_set(
+    cleaned_df, datetime(2018, 7, 25), delta_train=21
+)
+train_df, val_df = get_train_test_set(train_df, datetime(2018, 7, 25))
+
+# For each of these sets, we make arrays of features (the properties we want to train on) and labels (the things we want to predict).
+
+label_columns = ["is_fraud"]
+feature_columns = [
+    "amount",
+    "is_weekend",
+    "is_night",
+    "customer_num_transactions_1_day",
+    "customer_num_transactions_7_day",
+    "customer_num_transactions_30_day",
+    "customer_avg_amount_1_day",
+    "customer_avg_amount_7_day",
+    "customer_avg_amount_30_day",
+    "terminal_num_transactions_1_day",
+    "terminal_num_transactions_7_day",
+    "terminal_num_transactions_30_day",
+    "terminal_fraud_risk_1_day",
+    "terminal_fraud_risk_7_day",
+    "terminal_fraud_risk_30_day",
+]
+
+train_labels = np.array(train_df[label_columns])
+val_labels = np.array(val_df[label_columns])
+test_labels = np.array(test_df[label_columns])
+
+train_features = np.array(train_df[feature_columns])
+val_features = np.array(val_df[feature_columns])
+test_features = np.array(test_df[feature_columns])
+
+# Finally, we just want to make sure all of the values are in a similar scale. 
+# This makes learning a little more predictable. The scaler is tuned on the training data, and then used to scale the validation and test data.
+
+scaler = StandardScaler()
+train_features = scaler.fit_transform(train_features)
+
+val_features = scaler.transform(val_features)
+test_features = scaler.transform(test_features)
+
+print('Training labels shape:', train_labels.shape)
+print('Validation labels shape:', val_labels.shape)
+print('Test labels shape:', test_labels.shape)
+
+print('Training features shape:', train_features.shape)
+print('Validation features shape:', val_features.shape)
+print('Test features shape:', test_features.shape)
