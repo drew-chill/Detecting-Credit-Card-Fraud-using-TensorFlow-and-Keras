@@ -1,0 +1,43 @@
+# This model is made up of two hidden layers with 500 nodes each. There is a dropout layer to prevent overfitting. 
+# This means that for each node in the final hidden layer, there is a 0.2 chance in each training run of it not being used.
+# The loss function (what training will aim to minimize) is binary cross entropy. This is standard for binary classification problems.
+
+# Hyperparameters determine how our model learns, rather than the parameters of the model that are learned through training. 
+# Often, hyperparameters can be chosen arbitrarily by their model's authors. There are more quantitative approaches to finding the correct ones. 
+# In this case, several hyperparameters have come from analysis in the Handbook.
+
+# Batch size: 64
+# Epochs: 40
+# Number of hidden layers: 2
+# Nodes per hidden layer: 500
+# Probability of dropout layer: 0.2
+# Learning rate: 0.001
+
+# bias fix to speed up training
+# see https://www.tensorflow.org/tutorials/structured_data/imbalanced_data#optional_set_the_correct_initial_bias
+output_bias = tf.keras.initializers.Constant(np.log([fraud_count / not_fraud_count]))
+
+model = keras.Sequential(
+    [
+        keras.layers.Dense(
+            500, activation="relu", input_shape=(train_features.shape[-1],)
+        ),
+        keras.layers.Dense(
+            500, activation="relu", input_shape=(train_features.shape[-1],)
+        ),
+        keras.layers.Dropout(0.2),
+        keras.layers.Dense(1, activation="sigmoid", bias_initializer=output_bias),
+    ]
+)
+
+model.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    loss=keras.losses.BinaryCrossentropy(),
+    metrics=[
+        keras.metrics.Precision(name="precision"),
+        keras.metrics.Recall(name="recall"),
+        keras.metrics.AUC(name="auc"),
+        keras.metrics.AUC(name="prc", curve="PR"),
+    ],
+)
+model.summary()
