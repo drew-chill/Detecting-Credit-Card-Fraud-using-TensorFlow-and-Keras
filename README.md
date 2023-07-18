@@ -45,3 +45,6 @@ from sklearn.preprocessing import StandardScaler
 mpl.rcParams['figure.figsize'] = (12, 10)
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 ```
+
+## Acknowledgement
+This tutorial was developed by Deepnote and Christian Silver.
