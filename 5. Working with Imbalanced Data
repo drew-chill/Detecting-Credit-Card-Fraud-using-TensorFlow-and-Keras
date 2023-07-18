@@ -1,0 +1,11 @@
+# Our model needs to take each row of features and make a prediction of whether a transaction is fraudulent or not.
+# A simple feed-forward neural network is a good fit for this. It performs a multitude of mathematical calculations on each input row.
+# The parameters of each of these calculations are what end up getting tuned during training.
+# This model will be built in Keras, which is a user-friendly deep learning API on top of TensorFlow.
+
+weight_for_not_fraud = (1.0 / not_fraud_count) * total_count / 2.0
+weight_for_fraud = (1.0 / fraud_count) * total_count / 2.0
+
+class_weight = {0: weight_for_not_fraud, 1: weight_for_fraud}
+
+class_weight
